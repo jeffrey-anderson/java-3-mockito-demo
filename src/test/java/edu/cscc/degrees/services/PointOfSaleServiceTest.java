@@ -29,17 +29,17 @@ class PointOfSaleServiceTest {
     @InjectMocks
     private PointOfSaleService pointOfSaleService;
 
-    Customer testCustomer = new Customer("123-45-6789", "Bart", "Simpson");
-
     @Test
     @DisplayName("No offers made if customer has no credit score")
     void test01() throws NoCreditScoreAvailableException {
         when(creditBureauService.getCreditScore(any(String.class)))
                 .thenThrow(new NoCreditScoreAvailableException());
-        assertTrue(pointOfSaleService.getOffers(testCustomer).isEmpty());
+        assertTrue(pointOfSaleService.getOffers(
+                new Customer("123-45-6789", "Bart", "Simpson")).isEmpty());
         verify(creditBureauService, times(1)).getCreditScore(any(String.class));
     }
 
+    @DisplayName("It offers the correct rate based on the credit score")
     @ParameterizedTest(name = "Customer with SSN of {0} and credit score {1} is given rate {2}")
     @MethodSource("offersWithArgsList")
     void test02(String ssn, int score, String rate) throws NoCreditScoreAvailableException {
