@@ -1,6 +1,8 @@
 package edu.cscc.degrees.model;
 
 public class Customer {
+    private long id;
+    private String membershipNumber;
     private String taxID;
     private String firstName;
     private String lastName;
@@ -8,10 +10,28 @@ public class Customer {
     public Customer() {
     }
 
-    public Customer(String taxID, String firstName, String lastName) {
+    public Customer(long id, String membershipNumber, String taxID, String firstName, String lastName) {
+        this.id = id;
+        this.membershipNumber = membershipNumber;
         this.taxID = taxID;
         this.firstName = firstName;
         this.lastName = lastName;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public String getMembershipNumber() {
+        return membershipNumber;
+    }
+
+    public void setMembershipNumber(String membershipNumber) {
+        this.membershipNumber = membershipNumber;
     }
 
     public String getTaxID() {
