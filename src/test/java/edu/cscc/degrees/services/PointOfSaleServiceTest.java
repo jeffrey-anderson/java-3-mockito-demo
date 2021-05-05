@@ -39,7 +39,7 @@ class PointOfSaleServiceTest {
   private CustomerRepository customerRepository;
 
   @InjectMocks
-  private PointOfSaleService pointOfSaleService;
+  private PointOfSaleServiceImpl pointOfSaleService;
 
   @Test
   @DisplayName("No offers made if customer has no credit score")
@@ -115,7 +115,7 @@ class PointOfSaleServiceTest {
   }
 
   @Test
-  @DisplayName("It returns adds loyalty points when valid customer number is applied")
+  @DisplayName("It adds loyalty points when valid customer number is supplied")
   void test05() throws ChargeDeclinedException {
     Customer testCustomer = new Customer(1L, "M1234", null, null, null);
     when(creditCardService.chargeCard(any(String.class), any(Double.TYPE)))
@@ -138,5 +138,30 @@ class PointOfSaleServiceTest {
     verifyNoMoreInteractions(creditCardService);
     verifyNoInteractions(creditBureauService);
   }
+
+  @Test
+  @DisplayName("It does not adds loyalty points when no customer has that membership number ")
+  void test06() throws ChargeDeclinedException {
+    Customer testCustomer = new Customer(1L, "M1234", null, null, null);
+    when(creditCardService.chargeCard(any(String.class), any(Double.TYPE)))
+      .thenReturn("Confirmation 12345");
+    when(customerRepository.findByMembershipNumber("M1234")).thenReturn(Optional.empty());
+    Cart cart = new Cart();
+    cart.addItem(new LineItem("SMOKED TURKEY GRINDER", 1, 12.00));
+    cart.addItem(new LineItem("SHRIMP ‘N GRITS", 1, 13.00));
+
+    assertEquals(25.00,
+      pointOfSaleService.checkout("12-34-56", "M1234", cart));
+
+    verify(creditCardService,
+      times(1)).chargeCard("12-34-56", 25.00);
+    verify(customerRepository,
+      times(1)).findByMembershipNumber("M1234");
+
+    verifyNoInteractions(loyaltyProgramService);
+    verifyNoMoreInteractions(creditCardService);
+    verifyNoInteractions(creditBureauService);
+  }
+
 
 }
