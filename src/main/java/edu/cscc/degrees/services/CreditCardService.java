@@ -8,5 +8,5 @@ public interface CreditCardService {
      * @return the transaction confirmation number
      * @throws ChargeDeclinedException if the card is invalid or the customer is over their limit
      */
-    public String chargeCard (String cardNumber, double amount) throws ChargeDeclinedException;
+    String chargeCard (String cardNumber, double amount) throws ChargeDeclinedException;
 }

@@ -1,6 +1,8 @@
 package edu.cscc.degrees.services;
 
+import edu.cscc.degrees.model.Cart;
 import edu.cscc.degrees.model.Customer;
+import edu.cscc.degrees.model.LineItem;
 import edu.cscc.degrees.model.Offer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,7 +14,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,6 +27,9 @@ class PointOfSaleServiceTest {
     @Mock
     private CreditBureauService creditBureauService;
 
+    @Mock
+    private CreditCardService creditCardService;
+
     @InjectMocks
     private PointOfSaleService pointOfSaleService;
 
@@ -34,8 +38,10 @@ class PointOfSaleServiceTest {
     void test01() throws NoCreditScoreAvailableException {
         when(creditBureauService.getCreditScore(any(String.class)))
                 .thenThrow(new NoCreditScoreAvailableException());
+
         assertTrue(pointOfSaleService.getOffers(
                 new Customer("123-45-6789", "Bart", "Simpson")).isEmpty());
+
         verify(creditBureauService, times(1)).getCreditScore(any(String.class));
     }
 
@@ -44,11 +50,45 @@ class PointOfSaleServiceTest {
     @MethodSource("offersWithArgsList")
     void test02(String ssn, int score, String rate) throws NoCreditScoreAvailableException {
         when(creditBureauService.getCreditScore(ssn)).thenReturn(score);
-        assertEquals(pointOfSaleService.getOffers(
-                new Customer(ssn, "first", "last")).get(0).getAmount(),rate);
+
+        List<Offer> offers = pointOfSaleService.getOffers(
+                new Customer(ssn, "first", "last"));
+        assertEquals(1, offers.size());
+        assertEquals(rate, offers.get(0).getAmount());
+
         verify(creditBureauService, times(1)).getCreditScore(ssn);
         verifyNoMoreInteractions(creditBureauService);
     }
+
+    @Test
+    @DisplayName("It throws ChargeDeclinedException when card is declined")
+    void test03() throws ChargeDeclinedException {
+        when(creditCardService.chargeCard(any(String.class), any(Double.TYPE)))
+                .thenThrow(new ChargeDeclinedException());
+        Cart cart = new Cart();
+        assertThrows(ChargeDeclinedException.class, () -> pointOfSaleService.checkout("", cart));
+
+        verify(creditCardService, times(1)).chargeCard("", 0.00);
+        verifyNoMoreInteractions(creditCardService);
+        verifyNoInteractions(creditBureauService);
+    }
+
+    @Test
+    @DisplayName("It returns the total amount when the card is not declined")
+    void test04() throws ChargeDeclinedException {
+        when(creditCardService.chargeCard(any(String.class), any(Double.TYPE)))
+                .thenReturn("Confirmation 12345");
+        Cart cart = new Cart();
+        cart.addItem(new LineItem("SMOKED TURKEY GRINDER", 1, 12.00));
+        cart.addItem(new LineItem("SHRIMP ‘N GRITS", 1, 13.00));
+
+        assertEquals(25.00,pointOfSaleService.checkout("12-34-56", cart));
+
+        verify(creditCardService, times(1)).chargeCard("12-34-56", 25.00);
+        verifyNoMoreInteractions(creditCardService);
+        verifyNoInteractions(creditBureauService);
+    }
+
 
     private static List<Arguments> offersWithArgsList() {
         return Arrays.asList(

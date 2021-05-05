@@ -1,18 +1,20 @@
 package edu.cscc.degrees.services;
 
+import edu.cscc.degrees.model.Cart;
 import edu.cscc.degrees.model.Customer;
 import edu.cscc.degrees.model.Offer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class PointOfSaleService {
 
     CreditBureauService creditBureauService;
+    CreditCardService creditCardService;
 
-    public PointOfSaleService(CreditBureauService creditBureauService) {
+    public PointOfSaleService(CreditBureauService creditBureauService, CreditCardService creditCardService) {
         this.creditBureauService = creditBureauService;
+        this.creditCardService = creditCardService;
     }
 
     public List<Offer> getOffers(Customer customer) {
@@ -37,6 +39,12 @@ public class PointOfSaleService {
         }
 
         return offers;
+    }
+
+    public double checkout(String cardNumber, Cart cart) throws ChargeDeclinedException {
+        double totalAmount = cart.getTotal();
+        creditCardService.chargeCard(cardNumber, totalAmount);
+        return totalAmount;
     }
 
 

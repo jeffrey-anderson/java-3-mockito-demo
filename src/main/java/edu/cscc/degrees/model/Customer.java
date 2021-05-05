@@ -1,7 +1,5 @@
 package edu.cscc.degrees.model;
 
-import java.time.LocalDate;
-
 public class Customer {
     private String taxID;
     private String firstName;
