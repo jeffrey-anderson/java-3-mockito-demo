@@ -42,6 +42,12 @@ class PointOfSaleServiceTest {
   private PointOfSaleServiceImpl pointOfSaleService;
 
   @Test
+  @DisplayName("It runs tests")
+  public void test00() {
+    assertTrue(true);
+  }
+
+  @Test
   @DisplayName("No offers made if customer has no credit score")
   void test01() throws NoCreditScoreAvailableException {
     when(creditBureauService.getCreditScore(any(String.class)))
